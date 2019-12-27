@@ -1,0 +1,24 @@
+name: Docker Image CI
+
+on: 
+  push:
+    branches: 
+      - master
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Login to docker
+      uses: Azure/docker-login@v1
+      with:
+        username: tommysolsen
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag tommysolsen/bunkit-vue:latest
+    - name: Upload image
+      run: docker push tommysolsen/bunkit-vue:latest 
