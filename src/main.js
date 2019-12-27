@@ -51,7 +51,7 @@ const store = new Vuex.Store({
         countObject.state = 1
         axios({
           method: 'post',
-          url: 'http://varetelling.tommyolsen.net/api/count',
+          url: '/api/count',
           data: formData,
           timeout: 10000,
           config: { headers: {'Content-Type': 'multipart/form-data' }}
@@ -69,7 +69,7 @@ const store = new Vuex.Store({
       countObject.promise()
     }
   }
-}) 
+})
 
 // Init App
 new Vue({

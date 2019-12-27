@@ -89,7 +89,7 @@ export default {
   },
   methods: {
     fetchData: function () {
-      axios.get("http://varetelling.tommyolsen.net/api/items")
+      axios.get("/api/items")
       .then((response)=>{
         console.log("ok", response)
         this.$store.state.items = response.data;
@@ -97,7 +97,7 @@ export default {
       .catch((error) => {
         console.log("church", error)
       })
-  
+
     },
     trylogin: function () {
       /*
@@ -105,11 +105,11 @@ export default {
       formData.set('name', this.teller)
       axios({
         method: 'post',
-        url: 'http://varetelling.tommyolsen.net/count/session.json',
+        url: '/count/session.json',
         data: formData,
         config: { headers: {'Content-Type': 'multipart/form-data' }}
       })*/
-      axios.post("http://varetelling.tommyolsen.net/count/session.json", "name=" + encodeURIComponent(this.teller), {headers: {'Content-Type': 'multipart/form-data'}})
+      axios.post("/count/session.json", "name=" + encodeURIComponent(this.teller), {headers: {'Content-Type': 'multipart/form-data'}})
       .then( response => {
         this.$store.state.teller = this.teller
         this.$store.state.apiKey = response.data.api_key
