@@ -1,8 +1,8 @@
 name: Docker Image CI
 
-on: 
+on:
   push:
-    branches: 
+    branches:
       - master
 
 jobs:
@@ -21,4 +21,8 @@ jobs:
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag tommysolsen/bunkit-vue:latest
     - name: Upload image
-      run: docker push tommysolsen/bunkit-vue:latest 
+      run: docker push tommysolsen/bunkit-vue:latest
+    - name: Tag and upload SHA tagged image
+      run: |
+        docker tag tommysolsen/bunkit-vue:latest tommysolsen/bunkit-vue:${{ github.sha }}
+        docker push tommysolsen/bunkit-vue:${{ github.sha }}
