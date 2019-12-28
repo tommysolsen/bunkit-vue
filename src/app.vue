@@ -42,10 +42,10 @@
             </f7-list-item>
           </f7-list>
           <f7-list>
-            <f7-list-button title="Sign In" v-on:click="trylogin"></f7-list-button>
+            <f7-list-button title="Sign In" v-on:click="loginUser(teller)"></f7-list-button>
             <f7-block-footer>
               <p>Click Sign In to close Login Screen</p>
-              <p v-show="show_error" class="red">{{ errormsg }}</p>
+              <p v-if="hasLoginError" class="red">{{ loginError }}</p>
             </f7-block-footer>
           </f7-list>
         </f7-page>
@@ -57,7 +57,7 @@
 
 <script>
 import axios from 'axios'
-
+import { mapGetters, mapActions } from 'vuex'
 export default {
   name: 'App',
   data: () => {
@@ -67,72 +67,35 @@ export default {
     }
   },
   computed: {
+    ...mapGetters([
+      'isLoggedIn',
+      'URL',
+      'currentUser',
+      'hasLoginError',
+      'loginError'
+    ]),
     loginScreenOpened: function() {
-      return this.$store.state.apiKey == ""
+      return this.isLoggedIn == false
     },
     show_error: function() {
       return this.errormsg != "";
     }
   },
   created: function () {
-    this.fetchData()
-    if(window.localStorage.getItem("api-expires") < Date.now())
-    {
-      window.localStorage.clear("api-expires")
-      window.localStorage.clear("api-key")
-      window.localStorage.clear("teller-name")
-    } else {
-      this.$store.state.apiKey = window.localStorage.getItem("api-key")
-      this.$store.state.teller = window.localStorage.getItem("teller-name")
-    }
+
   },
   methods: {
-    fetchData: function () {
-      axios.get("/api/items")
-      .then((response)=>{
-        console.log("ok", response)
-        this.$store.state.items = response.data;
-      })
-      .catch((error) => {
-        console.log("church", error)
-      })
-
-    },
-    trylogin: function () {
-      /*
-      let formData = new FormData()
-      formData.set('name', this.teller)
-      axios({
-        method: 'post',
-        url: '/count/session.json',
-        data: formData,
-        config: { headers: {'Content-Type': 'multipart/form-data' }}
-      })*/
-      axios.post("/count/session.json", "name=" + encodeURIComponent(this.teller), {headers: {'Content-Type': 'multipart/form-data'}})
-      .then( response => {
-        this.$store.state.teller = this.teller
-        this.$store.state.apiKey = response.data.api_key
-        window.localStorage.setItem("api-key", response.data.api_key);
-        window.localStorage.setItem("teller-name", this.teller)
-        let date = new Date(Date.now())
-        date.setDate(date.getDate() +1 )
-        window.localStorage.setItem("api-expires", date.getTime());
-      })
-      .catch( error => {
-        console.log("error", error)
-        if(error.response) {
-          if(error.response.status == 433)
-            this.errormsg = "User doesn't exist";
-        } else {
-          this.errormsg = error
-        }
-      })
-    },
-    remKey: function() {
-      window.localStorage.clear("api-key")
-      window.localStorage.clear("api-expires")
-      window.localStorage.clear("teller-name")
-      return true;
+    ...mapActions([
+      'loginUser',
+      'getItems'
+    ]),
+  },
+  watch: {
+    isLoggedIn(isLoggedIn) {
+      console.log("Now logged in")
+      if(isLoggedIn) {
+        this.getItems()
+      }
     }
   }
 }

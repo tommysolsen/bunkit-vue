@@ -21,15 +21,25 @@
         </f7-list-item-row>
       </f7-list-item>
       <f7-list-item>
-        <f7-list-button color="green" @click="count" no-fast-click disabled>Count</f7-list-button>
+        <f7-list-button color="green" @click="count" no-fast-click :disabled="isValid">Count</f7-list-button>
       </f7-list-item>
     </f7-list>
-    <f7-list media-list v-show="showLastCounts">
-       <f7-list-item v-for="item in lastCounts" :key="item.id" :title="item.name" :footer="item.code" :badge-color="getStatusColor(item.state)" :badge="getStatusText(item.state)">{{item.quantity * item.unit}} L</f7-list-item>
+    <f7-list media-list v-if="getLastCounts.length > 0">
+       <f7-list-item
+        v-for="item in getLastCounts"
+        :key="item.id"
+        :title="item.name"
+        :footer="item.code"
+        :badge-color="getStatusColor(item)"
+        :badge="getStatusString(item)"
+      >
+        {{item.quantity * item.units}} L
+      </f7-list-item>
     </f7-list>
   </f7-page>
 </template>
 <script>
+import { mapGetters, mapActions } from 'vuex';
 export default {
   props: {
     initialCode: {
@@ -45,7 +55,8 @@ export default {
     return {
       code: "",
       quantity: "",
-      liters: ""
+      liters: "",
+      currentItem: null
     }
   },
   mounted: function() {
@@ -53,89 +64,54 @@ export default {
     this.liters = this.initialQty
   },
   computed: {
-      itemName: function(event) {
-      let ret = undefined;
-      this.$store.state.items.forEach( item => {
-        if(item.code === this.code){
-          ret = item.name
-        }
-      })
-
-      return ret ? ret : "Unknown"
+    ...mapGetters([
+      'getItemByCode',
+      'getLastCounts',
+      'getStatusString',
+      'getStatusColor'
+    ]),
+    itemName: function(event) {
+      return this.currentItem ? this.currentItem.name : "UNKNOWN";
     },
     itemCount: function(ev) {
-      let ret = undefined;
-      this.$store.state.items.forEach( item => {
-        if(item.code === this.code){
-          ret = item.quantity
-        }
-      })
-      return ret ? ret : "1"
-    },
-    lastCounts: function(ev) {
-      return this.$store.state.counts.slice(-3)
-    },
-    showLastCounts: function(ev) {
-      return this.$store.state.counts.length > 0
+      return this.currentItem ? this.currentItem.quantity : "1";
     },
     isValid: function() {
-      if(this.code == "" || this.quantity == "" || this.liters == "")
-        return false
-      return true
+      return !!this.currentItem && !!this.quantity
     }
   },
   methods: {
+    ...mapActions([
+      'performCount'
+    ]),
     count: function(ev) {
       console.log("count", ev)
       if(!this.isValid) {
         console.log("not valid")
         return;
       }
-      this.$store.commit('addCount', {
-        name: this.itemName,
+      this.performCount({
+        name: this.currentItem.name || "Unknown",
         code: this.code,
         quantity: this.quantity,
-        unit: this.liters,
-        state: 0
+        units: this.liters
       })
       this.code = ""
       this.quantity = ""
     },
     updateView: function () {
-      let ret = undefined
-      this.$store.state.items.forEach( item => {
-        if(item.code === this.code){
-          ret = item.quantity
-          return
-        }
-        
-      })
-      console.log(ret)
-      if(ret) {
-          this.liters = ret;
-        }
+      this.currentItem = this.getItemByCode(this.code)
+      this.liters = this.currentItem ? this.currentItem.quantity : 1
     },
-    getStatusText: function(code) {
-      return {
-        0: "Not Processed",
-        1: "Sent",
-        2: "Network Error",
-        3: "Accepted",
-        434: "Item not found",
-        435: "Could not count",
-        436: "Item not in set"
-      }[code]
-    },
-    getStatusColor: function(code) {
-      return {
-        0: "gray",
-        1: "blue",
-        2: "red",
-        3: "green",
-        434: "red",
-        435: "red",
-        436: "red"
-      }[code]
+  },
+  watch: {
+    code(n) {
+      if(n == "") {
+        this.currentItem = null
+      }
+      this.currentItem = this.getItemByCode(n)
+      console.log(this.currentItem)
+      this.liters = this.currentItem ? this.currentItem.quantity : 1
     }
   }
 }

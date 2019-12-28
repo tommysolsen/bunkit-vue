@@ -8,15 +8,14 @@
     </f7-navbar>
     <f7-block-title>Status</f7-block-title>
     <f7-list>
-      <f7-list-item v-show="!loadDone" title="Fetching items">{{state}}</f7-list-item>
-      <f7-list-item title="Items loaded"> {{ itemsLoaded }}</f7-list-item>
+      <f7-list-item title="Items loaded" @click="getItems(true)"> {{ itemsLoaded ? itemCount : 'Laster' }}</f7-list-item>
       <f7-list-item title="Teller"> {{ teller }}</f7-list-item>
       <f7-list-item title="Api Key"> {{ apiKey }}</f7-list-item>
-      <f7-list-item title="Form"></f7-list-item>
     </f7-list>
   </f7-page>
 </template>
 <script>
+import { mapGetters, mapActions } from 'vuex';
 export default {
   props: ['test'],
   data: function() {
@@ -24,19 +23,24 @@ export default {
       state: "Startet"
     }
   },
+  methods: {
+    ...mapActions([
+      'getItems'
+    ])
+  },
   computed: {
-    itemsLoaded: function() {
-      return this.$store.state.items.length;
-    },
-    loadDone: function () {
-      return this.$store.state.items.length > 0
-    },
+    ...mapGetters([
+      'itemCount',
+      'itemsLoaded',
+      'currentUser',
+      'isLoggedIn'
+    ]),
     teller: function () {
-      return this.$store.state.teller
+      return this.isLoggedIn ? this.currentUser.name : ""
     },
     apiKey: function () {
-      return this.$store.state.apiKey.slice(0, 15)
+      return this.isLoggedIn ? this.currentUser.apiKey : ""
     }
-  }
+  },
 }
 </script>
