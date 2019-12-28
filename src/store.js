@@ -18,7 +18,7 @@ export default new Vuex.Store({
     itemsLoaded: false,
     counts: [],
     currentUser: null,
-    basePath: "http://127.0.0.1:3000/",
+    basePath: "/",
     loginError: null
   },
   getters: {
