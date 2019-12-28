@@ -10,6 +10,7 @@ const vuexPersist = new VuexPersist({
   storage: window.localStorage
 })
 
+let timeouts = {}
 
 export default new Vuex.Store({
   state: {
@@ -57,7 +58,19 @@ export default new Vuex.Store({
       ITEM_NOT_FOUND: "red",
       ACCEPTED: "green",
       DROPPED: "red"
-  }[state] || "Unknown State")
+  }[state] || "Unknown State"),
+  getNthLastCounts:(state) => (n) => state.counts.slice(n*-1),
+  productSearch: (state) => (term) => new Promise((resolve) => {
+      if(term.length < 2) {
+        resolve(state.items.slice(0, 40))
+      }
+      resolve(state
+              .items
+              .filter(item => item.name.toLowerCase().includes(term.toLowerCase())
+                              || item.code.includes(term))
+              .slice(0, 50)
+      )
+    })
   },
   actions: {
     loginUser(context, name) {
@@ -69,6 +82,9 @@ export default new Vuex.Store({
     },
     performCount({commit}, payload) {
       commit('PERFORM_COUNT', payload)
+    },
+    clearCounts({commit}) {
+      commit('CLEAR_COUNTS')
     }
   },
   mutations: {
@@ -116,6 +132,10 @@ export default new Vuex.Store({
         state.itemsLoaded = false
       }
     },
+    async CLEAR_COUNTS(state) {
+      state.counts = []
+      Object.values(timeouts).forEach(clearTimeout)
+    },
     async PERFORM_COUNT(state, payload) {
       payload.uuid = v4()
       payload.state = "STORED"
@@ -151,14 +171,14 @@ export default new Vuex.Store({
             } else if(e.message && e.message == "Network Error") {
               state.counts[index].state = "NETWORK_ERROR"
               if(timeout < 60000)
-                setTimeout(() => SendPayload(payload, timeout * 2), timeout * 2)
+                setTimeout(() => timeouts[index] = SendPayload(payload, timeout * 2), timeout * 2)
               else
                 state.counts[index].state = "DROPPED"
             }
           }
         }
       }
-      SendPayload(payload)
+      timeouts[index] = SendPayload(payload)
     }
   },
   plugins: [

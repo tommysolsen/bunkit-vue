@@ -1,6 +1,6 @@
 <template>
   <f7-page>
-    
+
   <f7-navbar title="Varesøk" back-link="Back"></f7-navbar>
     <f7-list form>
       <f7-list-item>
@@ -9,44 +9,47 @@
       </f7-list-item>
     </f7-list>
     <f7-list media-list>
-      <f7-list-item :link="makeLink(item.code, item.quantity)" v-for="item in search_results" v-bind:key="item.code" v-bind:footer="item.code">{{ item.name }}</f7-list-item>
-    </f7-list> 
+      <f7-list-item v-if="!search_results.length && !term">Enter search term to search</f7-list-item>
+      <f7-list-item v-if="!search_results.length && term">Unable to find anything using that term</f7-list-item>
+      <f7-list-item v-else :link="makeLink(item.code, item.quantity)" v-for="item in search_results" v-bind:key="item.code" v-bind:footer="item.code">{{ item.name }}</f7-list-item>
+    </f7-list>
   </f7-page>
 </template>
 
 <script>
 import axios from 'axios'
+import { mapActions, mapGetters } from 'vuex';
 export default {
   name: 'ProductSearch',
   data: function() {
     return {
       spinner: false,
-      term: ""
+      term: "",
+      search_results: []
     }
-  },
-  created: function() {
-    
   },
   computed: {
-    search_results: function(event) {
-      if(this.term == "" || this.term.length <= 2) {
-        return this.$store.state.items;
-      } 
-      let tmp = this.$store.state.items;
-      this.term.split(" ").forEach((term)=> {
-        tmp = tmp.filter( (item) => item.code.includes(term) || item.name.toUpperCase().includes(term.toUpperCase()))
-      })
-      return tmp
-    }
+    ...mapGetters([
+      'productSearch'
+    ])
   },
   methods: {
     makeLink: function(code, qty) {
       return "/count/" + code + "/" + qty;
+    }
+  },
+  watch: {
+    term(nTerm) {
+      this.spinner = true
+      this.productSearch(nTerm)
+      .then((results) => this.search_results = results)
+      .catch(e => this.search_results = [])
+      .finally(() => this.spinner = false)
     }
   }
 }
 </script>
 
 <style>
-  
+
 </style>

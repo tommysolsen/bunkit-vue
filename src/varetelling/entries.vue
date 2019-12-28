@@ -1,6 +1,6 @@
 <template>
   <f7-page>
-    
+
   <f7-navbar title="Varesøk" back-link="Back"></f7-navbar>
     <f7-list form>
       <f7-list-item>
@@ -8,13 +8,17 @@
       </f7-list-item>
     </f7-list>
     <f7-list media-list>
-      <f7-list-item v-for="item in entries" :key="item.id" :title="item.name" :subtitle="item.code" :badge-color="getStatusColor(item.state)" :badge="getStatusText(item.state)">{{item.quantity * item.unit}} L</f7-list-item>
-    </f7-list> 
+      <f7-list-item>
+        <f7-button @click="clearCounts">Clear list</f7-button>
+      </f7-list-item>
+      <f7-list-item v-for="item in entries(30)" :key="item.id" :title="item.name" :subtitle="item.code" :badge-color="getStatusColor(item)" :badge="getStatusText(item)">{{item.quantity * item.units}} L</f7-list-item>
+    </f7-list>
   </f7-page>
 </template>
 
 <script>
 import axios from 'axios'
+import { mapGetters, mapActions } from 'vuex'
 export default {
   name: 'Entry',
   data: function() {
@@ -22,40 +26,23 @@ export default {
     }
   },
   created: function() {
-    
+
   },
   computed: {
-    entries: function () {
-      return this.$store.state.counts
-    }
+    ...mapGetters({
+      entries: 'getNthLastCounts',
+      getStatusColor: 'getStatusColor',
+      getStatusText: 'getStatusString'
+    })
   },
   methods: {
-    getStatusText: function(code) {
-      return {
-        0: "Not Processed",
-        1: "Sent",
-        2: "Unprocessable",
-        3: "Accepted",
-        434: "Item not found",
-        435: "Could not count",
-        436: "Item not in set"
-      }[code]
-    },
-    getStatusColor: function(code) {
-      return {
-        0: "gray",
-        1: "blue",
-        2: "red",
-        3: "green",
-        434: "red",
-        435: "red",
-        436: "red"
-      }[code]
-    }
+    ...mapActions([
+      'clearCounts'
+    ])
   }
 }
 </script>
 
 <style>
-  
+
 </style>
